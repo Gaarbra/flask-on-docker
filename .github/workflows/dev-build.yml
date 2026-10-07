@@ -1,0 +1,35 @@
+name: Development Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Build
+        run: docker compose build
+
+      - name: Start
+        run: docker compose up -d
+
+      - name: Test
+        run: |
+          for i in {1..30}; do
+            if curl --fail http://localhost:5002/; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          docker compose logs
+          exit 1
+
+      - name: Stop
+        if: always()
+        run: docker compose down -v
